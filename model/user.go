@@ -48,3 +48,8 @@ func (us *UserService) ByID(id uint) (*User, error) {
 		return nil, err
 	}
 }
+
+func (us *UserService) DestructiveReset() {
+	us.db.DropTableIfExists(&User{})
+	us.db.AutoMigrate(&User{})
+}
