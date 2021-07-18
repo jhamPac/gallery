@@ -1,0 +1,16 @@
+{{define "index"}}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Gallery</title>
+  </head>
+  <body>
+    {{template "navbar"}}
+    <main>
+        {{template "content" .}}
+
+        {{template "footer"}}
+    </main>
+  </body>
+</html>
+{{end}}
