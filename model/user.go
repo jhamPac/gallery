@@ -1,8 +1,14 @@
 package model
 
 import (
+	"errors"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+)
+
+var (
+	ErrNotFound = errors.New("model: resource not found")
 )
 
 type UserService struct {
@@ -28,4 +34,17 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 
 func (us *UserService) Close() error {
 	return us.db.Close()
+}
+
+func (us *UserService) ByID(id uint) (*User, error) {
+	var user User
+	err := us.db.Where("id = ?", id).First(&user).Error
+	switch err {
+	case nil:
+		return &user, nil
+	case gorm.ErrRecordNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
 }
