@@ -32,8 +32,8 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 	}, nil
 }
 
-func (us *UserService) Close() error {
-	return us.db.Close()
+func (us *UserService) Create(user *User) error {
+	return us.db.Create(user).Error
 }
 
 func (us *UserService) ByID(id uint) (*User, error) {
@@ -47,6 +47,10 @@ func (us *UserService) ByID(id uint) (*User, error) {
 	default:
 		return nil, err
 	}
+}
+
+func (us *UserService) Close() error {
+	return us.db.Close()
 }
 
 func (us *UserService) DestructiveReset() {
