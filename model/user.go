@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("model: resource not found")
+	ErrNotFound  = errors.New("model: resource not found")
+	ErrInvalidID = errors.New("model: ID provided was invalid")
 )
 
 type UserService struct {
@@ -66,6 +67,14 @@ func (us *UserService) ByEmail(email string) (*User, error) {
 
 func (us *UserService) Update(user *User) error {
 	return us.db.Save(user).Error
+}
+
+func (us *UserService) Delete(id uint) error {
+	if id == 0 {
+		return ErrInvalidID
+	}
+	user := User{Model: gorm.Model{ID: id}}
+	return us.db.Delete(&user).Error
 }
 
 func (us *UserService) Close() error {
