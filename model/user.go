@@ -64,6 +64,10 @@ func (us *UserService) ByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
+func (us *UserService) Update(user *User) error {
+	return us.db.Save(user).Error
+}
+
 func (us *UserService) Close() error {
 	return us.db.Close()
 }
