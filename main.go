@@ -34,7 +34,7 @@ func main() {
 	defer us.Close()
 	us.AutoMigrate()
 
-	userC := controller.NewUser()
+	userC := controller.NewUser(us)
 	staticPage := controller.NewStaticPage()
 
 	r := mux.NewRouter()
