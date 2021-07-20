@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jhampac/gallery/controller"
+	"github.com/jhampac/gallery/model"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -26,12 +27,12 @@ type User struct {
 
 func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
-	db, err := gorm.Open("postgres", psqlInfo)
+	us, err := model.NewUserService(psqlInfo)
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
-	db.AutoMigrate(&User{})
+	defer us.Close()
+	us.AutoMigrate()
 
 	userC := controller.NewUser()
 	staticPage := controller.NewStaticPage()
