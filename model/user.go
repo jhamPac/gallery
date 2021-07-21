@@ -11,6 +11,7 @@ import (
 var (
 	ErrNotFound  = errors.New("model: resource not found")
 	ErrInvalidID = errors.New("model: ID provided was invalid")
+	pepper       = "suns-in-7"
 )
 
 type UserService struct {
@@ -46,7 +47,7 @@ func first(db *gorm.DB, dst interface{}) error {
 
 func (us *UserService) Create(user *User) error {
 	hashedBytes, err := bcrypt.GenerateFromPassword(
-		[]byte(user.Password), bcrypt.DefaultCost)
+		[]byte(user.Password+pepper), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
