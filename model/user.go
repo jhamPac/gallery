@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	ErrNotFound  = errors.New("model: resource not found")
-	ErrInvalidID = errors.New("model: ID provided was invalid")
-	pepper       = "suns-in-7"
+	ErrNotFound        = errors.New("model: resource not found")
+	ErrInvalidID       = errors.New("model: ID provided was invalid")
+	ErrInvalidPassword = errors.New("model: incorrect password provided")
+	pepper             = "suns-in-7"
 )
 
 type UserService struct {
@@ -87,6 +88,23 @@ func (us *UserService) Delete(id uint) error {
 	}
 	user := User{Model: gorm.Model{ID: id}}
 	return us.db.Delete(&user).Error
+}
+
+func (us *UserService) Authenticate(email string, password string) (*User, error) {
+	foundUser, err := us.ByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+pepper))
+	switch err {
+	case nil:
+		return foundUser, nil
+	case bcrypt.ErrMismatchedHashAndPassword:
+		return nil, ErrInvalidPassword
+	default:
+		return nil, err
+	}
 }
 
 func (us *UserService) Close() error {
