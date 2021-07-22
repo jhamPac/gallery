@@ -7,7 +7,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jhampac/gallery/controller"
 	"github.com/jhampac/gallery/model"
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
@@ -18,12 +17,6 @@ const (
 	password = "password"
 	dbname   = "gallery"
 )
-
-type User struct {
-	gorm.Model
-	Name  string
-	Email string `gorm:"not null;unique_index"`
-}
 
 func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
@@ -44,5 +37,6 @@ func main() {
 	r.HandleFunc("/signup", userC.Create).Methods("POST")
 	r.Handle("/login", userC.LoginView).Methods("GET")
 	r.HandleFunc("/login", userC.Login).Methods("POST")
+
 	http.ListenAndServe(":8080", r)
 }
