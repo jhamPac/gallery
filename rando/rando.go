@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 )
 
+const RememberTokenBytes = 32
+
 func Bytes(n int) ([]byte, error) {
 	b := make([]byte, n)
 	_, err := rand.Read(b)
@@ -20,4 +22,8 @@ func String(nBytes int) (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+func RememberToken() (string, error) {
+	return String(RememberTokenBytes)
 }
