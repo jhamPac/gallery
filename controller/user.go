@@ -83,21 +83,20 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	cookie := http.Cookie{
-		Name:  "email",
-		Value: user.Email,
+	err = u.signIn(w, user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	http.SetCookie(w, &cookie)
-	fmt.Fprintln(w, "Success")
+	http.Redirect(w, r, "/cookietest", http.StatusFound)
 }
 
 func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("email")
+	cookie, err := r.Cookie("remember_token")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintln(w, "Email is ", cookie.Value)
+	fmt.Fprintln(w, "Remember token is ", cookie.Value)
 }
 
 func (u *User) signIn(w http.ResponseWriter, user *model.User) error {
