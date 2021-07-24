@@ -58,7 +58,7 @@ func (u *User) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set remember token
-	err := u.signIn(w, &user)
+	err := u.setRememberCookie(w, &user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -83,7 +83,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = u.signIn(w, user)
+	err = u.setRememberCookie(w, user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -99,7 +99,7 @@ func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Remember token is ", cookie.Value)
 }
 
-func (u *User) signIn(w http.ResponseWriter, user *model.User) error {
+func (u *User) setRememberCookie(w http.ResponseWriter, user *model.User) error {
 	if user.Remember == "" {
 		token, err := rando.RememberToken()
 		if err != nil {
