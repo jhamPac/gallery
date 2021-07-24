@@ -21,6 +21,21 @@ const (
 	hmacSecretKey = "change-this-secert-later-for-production"
 )
 
+type UserService struct {
+	UserDB
+}
+
+func NewUserService(connInfo string) (*UserService, error) {
+	ug, err := newUserGorm(connInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UserService{
+		UserDB: ug,
+	}, nil
+}
+
 type UserDB interface {
 	// db look ups with args
 	ByID(id uint) (*User, error)
@@ -38,10 +53,7 @@ type UserDB interface {
 	DestructiveReset() error
 }
 
-type UserService struct {
-	UserDB
-}
-
+// user db representation
 type User struct {
 	gorm.Model
 	Name         string
@@ -69,17 +81,6 @@ func newUserGorm(connInfo string) (*userGorm, error) {
 	return &userGorm{
 		db:   db,
 		hmac: hmac,
-	}, nil
-}
-
-func NewUserService(connInfo string) (*UserService, error) {
-	ug, err := newUserGorm(connInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	return &UserService{
-		UserDB: ug,
 	}, nil
 }
 
@@ -160,23 +161,6 @@ func (ug *userGorm) Delete(id uint) error {
 	return ug.db.Delete(&user).Error
 }
 
-func (us *UserService) Authenticate(email string, password string) (*User, error) {
-	foundUser, err := us.ByEmail(email)
-	if err != nil {
-		return nil, err
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+pepper))
-	switch err {
-	case nil:
-		return foundUser, nil
-	case bcrypt.ErrMismatchedHashAndPassword:
-		return nil, ErrInvalidPassword
-	default:
-		return nil, err
-	}
-}
-
 func (ug *userGorm) Close() error {
 	return ug.db.Close()
 }
@@ -194,4 +178,21 @@ func (ug *userGorm) AutoMigrate() error {
 		return err
 	}
 	return nil
+}
+
+func (us *UserService) Authenticate(email string, password string) (*User, error) {
+	foundUser, err := us.ByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+pepper))
+	switch err {
+	case nil:
+		return foundUser, nil
+	case bcrypt.ErrMismatchedHashAndPassword:
+		return nil, ErrInvalidPassword
+	default:
+		return nil, err
+	}
 }
