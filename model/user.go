@@ -103,6 +103,16 @@ func (us *UserService) ByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
+func (us *UserService) ByRemember(token string) (*User, error) {
+	var user User
+	rememberHash := us.hmac.Hash(token)
+	err := first(us.db.Where("remember_hash = ?", rememberHash), &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (us *UserService) Update(user *User) error {
 	if user.Remember != "" {
 		user.RememberHash = us.hmac.Hash(user.Remember)
