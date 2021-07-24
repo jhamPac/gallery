@@ -39,8 +39,7 @@ type UserDB interface {
 }
 
 type UserService struct {
-	db   *gorm.DB
-	hmac hasho.HMAC
+	UserDB
 }
 
 type User struct {
@@ -53,8 +52,13 @@ type User struct {
 	RememberHash string `gorm:"not null;unique_index"`
 }
 
-func NewUserService(connectionInfo string) (*UserService, error) {
-	db, err := gorm.Open("postgres", connectionInfo)
+type userGorm struct {
+	db   *gorm.DB
+	hmac hasho.HMAC
+}
+
+func newUserGorm(connInfo string) (*userGorm, error) {
+	db, err := gorm.Open("postgres", connInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -62,9 +66,20 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 
 	hmac := hasho.NewHMAC(hmacSecretKey)
 
-	return &UserService{
+	return &userGorm{
 		db:   db,
 		hmac: hmac,
+	}, nil
+}
+
+func NewUserService(connInfo string) (*UserService, error) {
+	ug, err := newUserGorm(connInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UserService{
+		UserDB: ug,
 	}, nil
 }
 
@@ -76,7 +91,7 @@ func first(db *gorm.DB, dst interface{}) error {
 	return err
 }
 
-func (us *UserService) Create(user *User) error {
+func (ug *userGorm) Create(user *User) error {
 	hashedBytes, err := bcrypt.GenerateFromPassword(
 		[]byte(user.Password+pepper), bcrypt.DefaultCost)
 	if err != nil {
@@ -95,14 +110,14 @@ func (us *UserService) Create(user *User) error {
 		}
 		user.Remember = token
 	}
-	user.RememberHash = us.hmac.Hash(user.Remember)
+	user.RememberHash = ug.hmac.Hash(user.Remember)
 
-	return us.db.Create(user).Error
+	return ug.db.Create(user).Error
 }
 
-func (us *UserService) ByID(id uint) (*User, error) {
+func (ug *userGorm) ByID(id uint) (*User, error) {
 	var user User
-	db := us.db.Where("id = ?", id)
+	db := ug.db.Where("id = ?", id)
 	err := first(db, &user)
 	if err != nil {
 		return nil, err
@@ -110,9 +125,9 @@ func (us *UserService) ByID(id uint) (*User, error) {
 	return &user, nil
 }
 
-func (us *UserService) ByEmail(email string) (*User, error) {
+func (ug *userGorm) ByEmail(email string) (*User, error) {
 	var user User
-	db := us.db.Where("email = ?", email)
+	db := ug.db.Where("email = ?", email)
 	err := first(db, &user)
 	if err != nil {
 		return nil, err
@@ -120,29 +135,29 @@ func (us *UserService) ByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-func (us *UserService) ByRemember(token string) (*User, error) {
+func (ug *userGorm) ByRemember(token string) (*User, error) {
 	var user User
-	rememberHash := us.hmac.Hash(token)
-	err := first(us.db.Where("remember_hash = ?", rememberHash), &user)
+	rememberHash := ug.hmac.Hash(token)
+	err := first(ug.db.Where("remember_hash = ?", rememberHash), &user)
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (us *UserService) Update(user *User) error {
+func (ug *userGorm) Update(user *User) error {
 	if user.Remember != "" {
-		user.RememberHash = us.hmac.Hash(user.Remember)
+		user.RememberHash = ug.hmac.Hash(user.Remember)
 	}
-	return us.db.Save(user).Error
+	return ug.db.Save(user).Error
 }
 
-func (us *UserService) Delete(id uint) error {
+func (ug *userGorm) Delete(id uint) error {
 	if id == 0 {
 		return ErrInvalidID
 	}
 	user := User{Model: gorm.Model{ID: id}}
-	return us.db.Delete(&user).Error
+	return ug.db.Delete(&user).Error
 }
 
 func (us *UserService) Authenticate(email string, password string) (*User, error) {
@@ -162,20 +177,20 @@ func (us *UserService) Authenticate(email string, password string) (*User, error
 	}
 }
 
-func (us *UserService) Close() error {
-	return us.db.Close()
+func (ug *userGorm) Close() error {
+	return ug.db.Close()
 }
 
-func (us *UserService) DestructiveReset() error {
-	err := us.db.DropTableIfExists(&User{}).Error
+func (ug *userGorm) DestructiveReset() error {
+	err := ug.db.DropTableIfExists(&User{}).Error
 	if err != nil {
 		return err
 	}
-	return us.AutoMigrate()
+	return ug.AutoMigrate()
 }
 
-func (us *UserService) AutoMigrate() error {
-	if err := us.db.AutoMigrate(&User{}).Error; err != nil {
+func (ug *userGorm) AutoMigrate() error {
+	if err := ug.db.AutoMigrate(&User{}).Error; err != nil {
 		return err
 	}
 	return nil
