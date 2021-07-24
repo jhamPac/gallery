@@ -98,7 +98,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("remember_token")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Fprintln(w, "Token no longer valid, please login")
 		return
 	}
 
@@ -125,8 +125,9 @@ func (u *User) setRememberCookie(w http.ResponseWriter, user *model.User) error 
 	}
 
 	cookie := http.Cookie{
-		Name:  "remember_token",
-		Value: user.Remember,
+		Name:     "remember_token",
+		Value:    user.Remember,
+		HttpOnly: true,
 	}
 	http.SetCookie(w, &cookie)
 
