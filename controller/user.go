@@ -91,6 +91,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
 	http.Redirect(w, r, "/cookietest", http.StatusFound)
 }
 
@@ -100,6 +101,7 @@ func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	fmt.Fprintln(w, "Remember token is ", cookie.Value)
 }
 
@@ -121,5 +123,6 @@ func (u *User) setRememberCookie(w http.ResponseWriter, user *model.User) error 
 		Value: user.Remember,
 	}
 	http.SetCookie(w, &cookie)
+
 	return nil
 }
