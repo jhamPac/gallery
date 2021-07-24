@@ -21,6 +21,23 @@ const (
 	hmacSecretKey = "change-this-secert-later-for-production"
 )
 
+type UserDB interface {
+	// db look ups with args
+	ByID(id uint) (*User, error)
+	ByEmail(email string) (*User, error)
+	ByRemember(token string) (*User, error)
+
+	// altering db data
+	Create(user *User) error
+	Update(user *User) error
+	Delete(id uint) error
+
+	// db operations
+	Close() error
+	AutoMigrate() error
+	DestructiveReset() error
+}
+
 type UserService struct {
 	db   *gorm.DB
 	hmac hasho.HMAC
