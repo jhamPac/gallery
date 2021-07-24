@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 )
 
+// 1e77 numbers of tokens
 const RememberTokenBytes = 32
 
 func Bytes(n int) ([]byte, error) {
