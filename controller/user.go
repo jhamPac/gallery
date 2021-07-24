@@ -102,7 +102,13 @@ func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintln(w, "Remember token is ", cookie.Value)
+	user, err := u.us.ByRemember(cookie.Value)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "Hello, %s\n", user.Name)
 }
 
 func (u *User) setRememberCookie(w http.ResponseWriter, user *model.User) error {
