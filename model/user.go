@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 
+	"github.com/jhampac/gallery/hasho"
 	"github.com/jhampac/gallery/rando"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -13,11 +14,16 @@ var (
 	ErrNotFound        = errors.New("model: resource not found")
 	ErrInvalidID       = errors.New("model: ID provided was invalid")
 	ErrInvalidPassword = errors.New("model: incorrect password provided")
-	pepper             = "suns-in-7"
+)
+
+const (
+	pepper        = "suns-in-7"
+	hmacSecretKey = "change-this-secert-later-for-production"
 )
 
 type UserService struct {
-	db *gorm.DB
+	db   *gorm.DB
+	hmac hasho.HMAC
 }
 
 type User struct {
@@ -36,8 +42,12 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 		return nil, err
 	}
 	db.LogMode(true)
+
+	hmac := hasho.NewHMAC(hmacSecretKey)
+
 	return &UserService{
-		db: db,
+		db:   db,
+		hmac: hmac,
 	}, nil
 }
 
@@ -68,6 +78,7 @@ func (us *UserService) Create(user *User) error {
 		}
 		user.Remember = token
 	}
+	user.RememberHash = us.hmac.Hash(user.Remember)
 
 	return us.db.Create(user).Error
 }
@@ -93,6 +104,9 @@ func (us *UserService) ByEmail(email string) (*User, error) {
 }
 
 func (us *UserService) Update(user *User) error {
+	if user.Remember != "" {
+		user.RememberHash = us.hmac.Hash(user.Remember)
+	}
 	return us.db.Save(user).Error
 }
 
