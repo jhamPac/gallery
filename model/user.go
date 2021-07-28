@@ -25,17 +25,6 @@ type UserService struct {
 	UserDB
 }
 
-func NewUserService(connInfo string) (*UserService, error) {
-	ug, err := newUserGorm(connInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	return &UserService{
-		UserDB: ug,
-	}, nil
-}
-
 type UserDB interface {
 	// db look ups with args
 	ByID(id uint) (*User, error)
@@ -67,6 +56,19 @@ type User struct {
 type userGorm struct {
 	db   *gorm.DB
 	hmac hasho.HMAC
+}
+
+var _ UserDB = &userGorm{}
+
+func NewUserService(connInfo string) (*UserService, error) {
+	ug, err := newUserGorm(connInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UserService{
+		UserDB: ug,
+	}, nil
 }
 
 func newUserGorm(connInfo string) (*userGorm, error) {
