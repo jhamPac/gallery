@@ -85,6 +85,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		return
 	}
 
 	err = u.setRememberCookie(w, user)
