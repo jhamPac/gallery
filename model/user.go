@@ -69,6 +69,7 @@ var _ UserDB = &userGorm{}
 
 type userValidator struct {
 	UserDB
+	hmac hasho.HMAC
 }
 
 func NewUserService(connInfo string) (UserService, error) {
@@ -77,10 +78,14 @@ func NewUserService(connInfo string) (UserService, error) {
 		return nil, err
 	}
 
+	hmac := hasho.NewHMAC(hmacSecretKey)
+	uv := &userValidator{
+		UserDB: ug,
+		hmac:   hmac,
+	}
+
 	return &userService{
-		UserDB: &userValidator{
-			UserDB: ug,
-		},
+		UserDB: uv,
 	}, nil
 }
 
@@ -151,9 +156,13 @@ func (ug *userGorm) ByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-func (ug *userGorm) ByRemember(token string) (*User, error) {
+func (uv *userValidator) ByRemember(token string) (*User, error) {
+	rememberHash := uv.hmac.Hash(token)
+	return uv.UserDB.ByRemember(rememberHash)
+}
+
+func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 	var user User
-	rememberHash := ug.hmac.Hash(token)
 	err := first(ug.db.Where("remember_hash = ?", rememberHash), &user)
 	if err != nil {
 		return nil, err
