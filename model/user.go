@@ -30,6 +30,8 @@ type userService struct {
 	UserDB
 }
 
+var _ UserService = &userService{}
+
 type UserDB interface {
 	// db look ups with args
 	ByID(id uint) (*User, error)
