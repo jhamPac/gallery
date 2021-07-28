@@ -21,7 +21,12 @@ const (
 	hmacSecretKey = "change-this-secert-later-for-production"
 )
 
-type UserService struct {
+type UserService interface {
+	Authenticate(email string, password string) (*User, error)
+	UserDB
+}
+
+type userService struct {
 	UserDB
 }
 
@@ -60,14 +65,20 @@ type userGorm struct {
 
 var _ UserDB = &userGorm{}
 
-func NewUserService(connInfo string) (*UserService, error) {
+type userValidator struct {
+	UserDB
+}
+
+func NewUserService(connInfo string) (UserService, error) {
 	ug, err := newUserGorm(connInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	return &UserService{
-		UserDB: ug,
+	return &userService{
+		UserDB: &userValidator{
+			UserDB: ug,
+		},
 	}, nil
 }
 
@@ -182,7 +193,7 @@ func (ug *userGorm) AutoMigrate() error {
 	return nil
 }
 
-func (us *UserService) Authenticate(email string, password string) (*User, error) {
+func (us *userService) Authenticate(email string, password string) (*User, error) {
 	foundUser, err := us.ByEmail(email)
 	if err != nil {
 		return nil, err
