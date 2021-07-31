@@ -71,6 +71,8 @@ type userValidator struct {
 	hmac hasho.HMAC
 }
 
+type userValFn func(*User) error
+
 func NewUserService(connInfo string) (UserService, error) {
 	ug, err := newUserGorm(connInfo)
 	if err != nil {
@@ -109,15 +111,10 @@ func first(db *gorm.DB, dst interface{}) error {
 }
 
 func (uv *userValidator) Create(user *User) error {
-	hashedBytes, err := bcrypt.GenerateFromPassword(
-		[]byte(user.Password+pepper), bcrypt.DefaultCost)
-	if err != nil {
+	if err := runUserValidations(user,
+		uv.bcryptPassword); err != nil {
 		return err
 	}
-
-	// hash password
-	user.PasswordHash = string(hashedBytes)
-	user.Password = ""
 
 	// check remember token
 	if user.Remember == "" {
@@ -170,6 +167,11 @@ func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 }
 
 func (uv *userValidator) Update(user *User) error {
+	if err := runUserValidations(user,
+		uv.bcryptPassword); err != nil {
+		return nil
+	}
+
 	if user.Remember != "" {
 		user.RememberHash = uv.hmac.Hash(user.Remember)
 	}
@@ -212,6 +214,10 @@ func (ug *userGorm) AutoMigrate() error {
 }
 
 func (uv *userValidator) bcryptPassword(user *User) error {
+	if user.Password == "" {
+		return nil
+	}
+
 	pwBytes := []byte(user.Password + pepper)
 	hashedBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
 	if err != nil {
@@ -220,6 +226,15 @@ func (uv *userValidator) bcryptPassword(user *User) error {
 
 	user.PasswordHash = string(hashedBytes)
 	user.Password = ""
+	return nil
+}
+
+func runUserValidations(user *User, fns ...userValFn) error {
+	for _, fn := range fns {
+		if err := fn(user); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
