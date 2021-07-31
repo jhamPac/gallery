@@ -211,6 +211,18 @@ func (ug *userGorm) AutoMigrate() error {
 	return nil
 }
 
+func (uv *userValidator) bcryptPassword(user *User) error {
+	pwBytes := []byte(user.Password + pepper)
+	hashedBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user.PasswordHash = string(hashedBytes)
+	user.Password = ""
+	return nil
+}
+
 func (us *userService) Authenticate(email string, password string) (*User, error) {
 	foundUser, err := us.ByEmail(email)
 	if err != nil {
