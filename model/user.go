@@ -13,12 +13,12 @@ import (
 )
 
 var (
-	ErrNotFound        = errors.New("model: resource not found")
-	ErrInvalidID       = errors.New("model: ID provided was invalid")
-	ErrInvalidPassword = errors.New("model: incorrect password provided")
-	ErrEmailRequired   = errors.New("model: email address is required")
-	ErrEmailInvalid    = errors.New("model: email address is not valid")
-	ErrEmailTaken      = errors.New("model: email address is already taken")
+	ErrNotFound          = errors.New("model: resource not found")
+	ErrIDInvalid         = errors.New("model: ID provided was invalid")
+	ErrPasswordInccorect = errors.New("model: incorrect password provided")
+	ErrEmailRequired     = errors.New("model: email address is required")
+	ErrEmailInvalid      = errors.New("model: email address is not valid")
+	ErrEmailTaken        = errors.New("model: email address is already taken")
 )
 
 const (
@@ -288,7 +288,7 @@ func (uv *userValidator) setRememberIfUnset(user *User) error {
 func (uv *userValidator) idGreaterThan(n uint) userValFn {
 	return userValFn(func(user *User) error {
 		if user.ID <= n {
-			return ErrInvalidID
+			return ErrIDInvalid
 		}
 		return nil
 	})
@@ -357,7 +357,7 @@ func (us *userService) Authenticate(email string, password string) (*User, error
 	case nil:
 		return foundUser, nil
 	case bcrypt.ErrMismatchedHashAndPassword:
-		return nil, ErrInvalidPassword
+		return nil, ErrPasswordInccorect
 	default:
 		return nil, err
 	}
