@@ -115,7 +115,8 @@ func (uv *userValidator) Create(user *User) error {
 	err := runUserValidations(user,
 		uv.bcryptPassword,
 		uv.setRememberIfUnset,
-		uv.hmacRemember)
+		uv.hmacRemember,
+		uv.normalizeEmail)
 	if err != nil {
 		return err
 	}
@@ -182,7 +183,8 @@ func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 func (uv *userValidator) Update(user *User) error {
 	err := runUserValidations(user,
 		uv.bcryptPassword,
-		uv.hmacRemember)
+		uv.hmacRemember,
+		uv.normalizeEmail)
 	if err != nil {
 		return err
 	}
