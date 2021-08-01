@@ -2,10 +2,10 @@ package controller
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/jhampac/gallery/model"
-	"github.com/jhampac/gallery/rando"
 	"github.com/jhampac/gallery/view"
 )
 
@@ -59,10 +59,10 @@ func (u *User) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// set remember token
+	// set remember token in cookie
 	err := u.setRememberCookie(w, &user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("could not set cookie for user %s", user.Name)
 	}
 
 	// redirect
@@ -113,18 +113,6 @@ func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *User) setRememberCookie(w http.ResponseWriter, user *model.User) error {
-	if user.Remember == "" {
-		token, err := rando.RememberToken()
-		if err != nil {
-			return err
-		}
-		user.Remember = token
-		err = u.us.Update(user)
-		if err != nil {
-			return err
-		}
-	}
-
 	cookie := http.Cookie{
 		Name:     "remember_token",
 		Value:    user.Remember,
