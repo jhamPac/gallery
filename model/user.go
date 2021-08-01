@@ -19,6 +19,8 @@ var (
 	ErrEmailRequired     = errors.New("model: email address is required")
 	ErrEmailInvalid      = errors.New("model: email address is not valid")
 	ErrEmailTaken        = errors.New("model: email address is already taken")
+	ErrPasswordTooShort  = errors.New("model: password must be at least 8 characters long")
+	ErrPasswordRequired  = errors.New("model: password is required")
 )
 
 const (
@@ -123,7 +125,10 @@ func first(db *gorm.DB, dst interface{}) error {
 
 func (uv *userValidator) Create(user *User) error {
 	err := runUserValidations(user,
+		uv.passwordRequired,
+		uv.passwordMinLength,
 		uv.bcryptPassword,
+		uv.passwordHashRequired,
 		uv.setRememberIfUnset,
 		uv.hmacRemember,
 		uv.normalizeEmail,
@@ -195,7 +200,9 @@ func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 
 func (uv *userValidator) Update(user *User) error {
 	err := runUserValidations(user,
+		uv.passwordMinLength,
 		uv.bcryptPassword,
+		uv.passwordHashRequired,
 		uv.hmacRemember,
 		uv.normalizeEmail,
 		uv.requireEmail,
@@ -334,6 +341,32 @@ func (uv *userValidator) emailIsAvailable(user *User) error {
 		return ErrEmailTaken
 	}
 
+	return nil
+}
+
+func (uv *userValidator) passwordMinLength(user *User) error {
+	if user.Password == "" {
+		return nil
+	}
+
+	if len(user.Password) < 8 {
+		return ErrPasswordTooShort
+	}
+
+	return nil
+}
+
+func (uv *userValidator) passwordRequired(user *User) error {
+	if user.Password == "" {
+		return ErrPasswordRequired
+	}
+	return nil
+}
+
+func (uv *userValidator) passwordHashRequired(user *User) error {
+	if user.PasswordHash == "" {
+		return ErrPasswordRequired
+	}
 	return nil
 }
 
