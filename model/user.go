@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/jhampac/gallery/hasho"
@@ -70,7 +71,8 @@ var _ UserDB = &userGorm{}
 
 type userValidator struct {
 	UserDB
-	hmac hasho.HMAC
+	hmac       hasho.HMAC
+	emailRegex *regexp.Regexp
 }
 
 type userValFn func(*User) error
@@ -82,14 +84,19 @@ func NewUserService(connInfo string) (UserService, error) {
 	}
 
 	hmac := hasho.NewHMAC(hmacSecretKey)
-	uv := &userValidator{
-		UserDB: ug,
-		hmac:   hmac,
-	}
+	uv := newUserValidator(ug, hmac)
 
 	return &userService{
 		UserDB: uv,
 	}, nil
+}
+
+func newUserValidator(udb UserDB, hmac hasho.HMAC) *userValidator {
+	return &userValidator{
+		UserDB:     udb,
+		hmac:       hmac,
+		emailRegex: regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,16}$`),
+	}
 }
 
 func newUserGorm(connInfo string) (*userGorm, error) {
