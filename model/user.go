@@ -17,6 +17,7 @@ var (
 	ErrInvalidID       = errors.New("model: ID provided was invalid")
 	ErrInvalidPassword = errors.New("model: incorrect password provided")
 	ErrEmailRequired   = errors.New("model: email address is required")
+	ErrEmailInvalid    = errors.New("model: email address is not valid")
 )
 
 const (
@@ -125,7 +126,8 @@ func (uv *userValidator) Create(user *User) error {
 		uv.setRememberIfUnset,
 		uv.hmacRemember,
 		uv.normalizeEmail,
-		uv.requireEmail)
+		uv.requireEmail,
+		uv.emailFormat)
 	if err != nil {
 		return err
 	}
@@ -194,7 +196,8 @@ func (uv *userValidator) Update(user *User) error {
 		uv.bcryptPassword,
 		uv.hmacRemember,
 		uv.normalizeEmail,
-		uv.requireEmail)
+		uv.requireEmail,
+		uv.emailFormat)
 	if err != nil {
 		return err
 	}
@@ -298,6 +301,18 @@ func (uv *userValidator) requireEmail(user *User) error {
 	if user.Email == "" {
 		return ErrEmailRequired
 	}
+	return nil
+}
+
+func (uv *userValidator) emailFormat(user *User) error {
+	if user.Email == "" {
+		return nil
+	}
+
+	if !uv.emailRegex.MatchString(user.Email) {
+		return ErrEmailInvalid
+	}
+
 	return nil
 }
 
