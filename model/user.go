@@ -18,6 +18,7 @@ var (
 	ErrInvalidPassword = errors.New("model: incorrect password provided")
 	ErrEmailRequired   = errors.New("model: email address is required")
 	ErrEmailInvalid    = errors.New("model: email address is not valid")
+	ErrEmailTaken      = errors.New("model: email address is already taken")
 )
 
 const (
@@ -127,7 +128,8 @@ func (uv *userValidator) Create(user *User) error {
 		uv.hmacRemember,
 		uv.normalizeEmail,
 		uv.requireEmail,
-		uv.emailFormat)
+		uv.emailFormat,
+		uv.emailIsAvailable)
 	if err != nil {
 		return err
 	}
@@ -197,7 +199,8 @@ func (uv *userValidator) Update(user *User) error {
 		uv.hmacRemember,
 		uv.normalizeEmail,
 		uv.requireEmail,
-		uv.emailFormat)
+		uv.emailFormat,
+		uv.emailIsAvailable)
 	if err != nil {
 		return err
 	}
@@ -311,6 +314,24 @@ func (uv *userValidator) emailFormat(user *User) error {
 
 	if !uv.emailRegex.MatchString(user.Email) {
 		return ErrEmailInvalid
+	}
+
+	return nil
+}
+
+func (uv *userValidator) emailIsAvailable(user *User) error {
+	existing, err := uv.ByEmail(user.Email)
+	if err == ErrNotFound {
+		return nil
+	}
+
+	// some error happened other than not found
+	if err != nil {
+		return err
+	}
+
+	if user.ID != existing.ID {
+		return ErrEmailTaken
 	}
 
 	return nil
