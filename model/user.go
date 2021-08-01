@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/jhampac/gallery/hasho"
 	"github.com/jhampac/gallery/rando"
@@ -136,6 +137,19 @@ func (ug *userGorm) ByID(id uint) (*User, error) {
 	return &user, nil
 }
 
+func (uv *userValidator) ByEmail(email string) (*User, error) {
+	user := User{
+		Email: email,
+	}
+
+	err := runUserValidations(&user, uv.normalizeEmail)
+	if err != nil {
+		return nil, err
+	}
+
+	return uv.UserDB.ByEmail(user.Email)
+}
+
 func (ug *userGorm) ByEmail(email string) (*User, error) {
 	var user User
 	db := ug.db.Where("email = ?", email)
@@ -260,6 +274,12 @@ func (uv *userValidator) idGreaterThan(n uint) userValFn {
 		}
 		return nil
 	})
+}
+
+func (uv *userValidator) normalizeEmail(user *User) error {
+	user.Email = strings.ToLower(user.Email)
+	user.Email = strings.TrimSpace(user.Email)
+	return nil
 }
 
 func runUserValidations(user *User, fns ...userValFn) error {
