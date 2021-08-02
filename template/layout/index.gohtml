@@ -3,12 +3,17 @@
 <html lang="en">
   <head>
     <title>Gallery</title>
+    <style>
+    .alert-danger {
+      margin-bottom: 32px;
+    }
+  </style>
   </head>
   <body>
     {{template "navbar"}}
-    <main>
+    <main style="padding-top:16px">
+        {{template "alert"}}
         {{template "content" .}}
-
         {{template "footer"}}
     </main>
   </body>
