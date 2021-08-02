@@ -4,16 +4,26 @@
   <head>
     <title>Gallery</title>
     <style>
-    .alert-danger {
+    .alert {
       margin-bottom: 32px;
+    }
+
+    .alert.alert-danger {
+      color: red;
+    }
+
+    .alert.alert-success {
+      color: green;
     }
   </style>
   </head>
   <body>
     {{template "navbar"}}
     <main style="padding-top:16px">
-        {{template "alert"}}
-        {{template "content" .}}
+        {{if .Alert}}
+          {{template "alert" .Alert}}
+        {{end}}
+        {{template "content" .Content}}
         {{template "footer"}}
     </main>
   </body>

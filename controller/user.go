@@ -35,7 +35,27 @@ func NewUser(us model.UserService) *User {
 }
 
 func (u *User) New(w http.ResponseWriter, r *http.Request) {
-	if err := u.NewView.Render(w, nil); err != nil {
+	type Alert struct {
+		Level   string
+		Message string
+	}
+
+	type Data struct {
+		Alert   *Alert
+		Content interface{}
+	}
+
+	alert := Alert{
+		Level:   "danger",
+		Message: "An error occured!",
+	}
+
+	data := Data{
+		Alert:   &alert,
+		Content: "Random stuff",
+	}
+
+	if err := u.NewView.Render(w, data); err != nil {
 		panic(err)
 	}
 }
