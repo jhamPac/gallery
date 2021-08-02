@@ -18,6 +18,17 @@ type View struct {
 }
 
 func (v *View) Render(w http.ResponseWriter, data interface{}) error {
+	w.Header().Set("Content-type", "text/html")
+
+	// this is like a convience wrapper
+	switch data.(type) {
+	case Data:
+	default:
+		data = Data{
+			Content: data,
+		}
+	}
+
 	return v.Template.ExecuteTemplate(w, v.Layout, data)
 }
 

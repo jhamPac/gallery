@@ -35,37 +35,24 @@ func NewUser(us model.UserService) *User {
 }
 
 func (u *User) New(w http.ResponseWriter, r *http.Request) {
-	type Alert struct {
-		Level   string
-		Message string
-	}
-
-	type Data struct {
-		Alert   *Alert
-		Content interface{}
-	}
-
-	alert := Alert{
-		Level:   "danger",
-		Message: "An error occured!",
-	}
-
-	data := Data{
-		Alert:   &alert,
-		Content: "Random stuff",
-	}
-
-	if err := u.NewView.Render(w, data); err != nil {
+	if err := u.NewView.Render(w, nil); err != nil {
 		panic(err)
 	}
 }
 
 func (u *User) Create(w http.ResponseWriter, r *http.Request) {
+	var vd view.Data
 
 	// get user data from request
 	var form SignupForm
 	if err := parseForm(r, &form); err != nil {
-		panic(err)
+		log.Println(err)
+		vd.Alert = &view.Alert{
+			Level:   view.AlertLvlError,
+			Message: view.AlertMsgGeneric,
+		}
+		u.NewView.Render(w, vd)
+		return
 	}
 
 	// create the user
