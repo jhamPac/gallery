@@ -62,14 +62,20 @@ func (u *User) Create(w http.ResponseWriter, r *http.Request) {
 		Password: form.Password,
 	}
 	if err := u.us.Create(&user); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		vd.Alert = &view.Alert{
+			Level:   view.AlertLvlError,
+			Message: err.Error(),
+		}
+
+		u.NewView.Render(w, vd)
 		return
 	}
 
 	// set remember token in cookie
 	err := u.setRememberCookie(w, &user)
 	if err != nil {
-		log.Printf("could not set cookie for user %s", user.Name)
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
 	}
 
 	// redirect
