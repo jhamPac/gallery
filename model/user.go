@@ -1,7 +1,6 @@
 package model
 
 import (
-	"errors"
 	"regexp"
 	"strings"
 
@@ -12,23 +11,36 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var (
-	ErrNotFound          = errors.New("model: resource not found")
-	ErrIDInvalid         = errors.New("model: ID provided was invalid")
-	ErrPasswordInccorect = errors.New("model: incorrect password provided")
-	ErrEmailRequired     = errors.New("model: email address is required")
-	ErrEmailInvalid      = errors.New("model: email address is not valid")
-	ErrEmailTaken        = errors.New("model: email address is already taken")
-	ErrPasswordTooShort  = errors.New("model: password must be at least 8 characters long")
-	ErrPasswordRequired  = errors.New("model: password is required")
-	ErrRememberRequited  = errors.New("model: remember token is required")
-	ErrRememberTooShort  = errors.New("model: remember token must be at least 32 bytes long")
+const (
+	ErrNotFound          modelError = "model: resource not found"
+	ErrIDInvalid         modelError = "model: ID provided was invalid"
+	ErrPasswordInccorect modelError = "model: incorrect password provided"
+	ErrEmailRequired     modelError = "model: email address is required"
+	ErrEmailInvalid      modelError = "model: email address is not valid"
+	ErrEmailTaken        modelError = "model: email address is already taken"
+	ErrPasswordTooShort  modelError = "model: password must be at least 8 characters long"
+	ErrPasswordRequired  modelError = "model: password is required"
+	ErrRememberRequited  modelError = "model: remember token is required"
+	ErrRememberTooShort  modelError = "model: remember token must be at least 32 bytes long"
 )
 
 const (
 	pepper        = "suns-in-7"
 	hmacSecretKey = "change-this-secert-later-for-production"
 )
+
+type modelError string
+
+func (e modelError) Error() string {
+	return string(e)
+}
+
+func (e modelError) Public() string {
+	s := strings.Replace(string(e), "model: ", "", 1)
+	split := strings.Split(s, " ")
+	split[0] = strings.Title(split[0])
+	return strings.Join(split, " ")
+}
 
 type UserService interface {
 	Authenticate(email string, password string) (*User, error)
