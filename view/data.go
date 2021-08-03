@@ -1,5 +1,7 @@
 package view
 
+import "log"
+
 const (
 	AlertLvlError   = "danger"
 	AlertLvlWarning = "warning"
@@ -17,4 +19,26 @@ type Data struct {
 type Alert struct {
 	Level   string
 	Message string
+}
+
+type PublicError interface {
+	error
+	Public() string
+}
+
+func (d *Data) SetAlert(err error) {
+	var msg string
+
+	pErr, ok := err.(PublicError)
+	if ok {
+		msg = pErr.Public()
+	} else {
+		log.Println(err)
+		msg = AlertMsgGeneric
+	}
+
+	d.Alert = &Alert{
+		Level:   AlertLvlError,
+		Message: msg,
+	}
 }
