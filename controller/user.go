@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/jhampac/gallery/model"
@@ -46,11 +45,7 @@ func (u *User) Create(w http.ResponseWriter, r *http.Request) {
 	// get user data from request
 	var form SignupForm
 	if err := parseForm(r, &form); err != nil {
-		log.Println(err)
-		vd.Alert = &view.Alert{
-			Level:   view.AlertLvlError,
-			Message: view.AlertMsgGeneric,
-		}
+		vd.SetAlert(err)
 		u.NewView.Render(w, vd)
 		return
 	}
@@ -62,11 +57,7 @@ func (u *User) Create(w http.ResponseWriter, r *http.Request) {
 		Password: form.Password,
 	}
 	if err := u.us.Create(&user); err != nil {
-		vd.Alert = &view.Alert{
-			Level:   view.AlertLvlError,
-			Message: err.Error(),
-		}
-
+		vd.SetAlert(err)
 		u.NewView.Render(w, vd)
 		return
 	}
