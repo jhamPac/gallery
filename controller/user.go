@@ -34,9 +34,7 @@ func NewUser(us model.UserService) *User {
 }
 
 func (u *User) New(w http.ResponseWriter, r *http.Request) {
-	if err := u.NewView.Render(w, nil); err != nil {
-		panic(err)
-	}
+	u.NewView.Render(w, nil)
 }
 
 func (u *User) Create(w http.ResponseWriter, r *http.Request) {
