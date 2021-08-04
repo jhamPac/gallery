@@ -74,27 +74,31 @@ func (u *User) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *User) Login(w http.ResponseWriter, r *http.Request) {
+	var vd view.Data
 	var form LoginForm
 	if err := parseForm(r, &form); err != nil {
-		panic(err)
+		vd.SetAlert(err)
+		u.LoginView.Render(w, vd)
+		return
 	}
 
 	user, err := u.us.Authenticate(form.Email, form.Password)
 	if err != nil {
 		switch err {
 		case model.ErrNotFound:
-			fmt.Fprintln(w, "invalid email address")
-		case model.ErrPasswordInccorect:
-			fmt.Fprintln(w, "invalid password")
+			vd.AlertError("No user exists with that email address")
 		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			vd.SetAlert(err)
 		}
+		u.LoginView.Render(w, vd)
 		return
 	}
 
 	err = u.setRememberCookie(w, user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		vd.SetAlert(err)
+		u.LoginView.Render(w, vd)
+		return
 	}
 
 	http.Redirect(w, r, "/cookietest", http.StatusFound)
